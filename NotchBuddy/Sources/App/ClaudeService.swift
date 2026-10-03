@@ -188,11 +188,12 @@ final class ClaudeService {
 
     func clearConversation() {
         conversationMessages = []
+        ClaudeCodeChat.shared.resetSession()
     }
 
     /// Resolved once: NSFullUserName() is a system call, and the name cannot change under us
     /// while the app runs.
-    private let systemPrompt = ClaudeService.makeSystemPrompt()
+    let systemPrompt = ClaudeService.makeSystemPrompt()
 
     /// Greets the user by their macOS first name when there is one worth using, and stays
     /// neutral otherwise — same wording as the Windows build.
@@ -217,6 +218,10 @@ final class ClaudeService {
     // MARK: - Chat (multi-turn, natural text + web search)
 
     func chat(query: String, context: PromptContext?, state: AppState) async {
+        if state.chatProvider == .claudecode {
+            await chatClaudeCode(query: query, context: context, state: state)
+            return
+        }
         guard state.chatProvider == .anthropic else {
             await chatOpenAICompatible(query: query, context: context, state: state)
             return
@@ -279,7 +284,7 @@ final class ClaudeService {
             switch provider {
             case .google:  baseURL = "https://generativelanguage.googleapis.com/v1beta/openai"
             case .openai:  baseURL = "https://api.openai.com/v1"
-            case .anthropic, .ollama, .lmstudio: baseURL = ""
+            case .anthropic, .ollama, .lmstudio, .claudecode: baseURL = ""
             }
         }
 
@@ -606,7 +611,7 @@ final class ClaudeService {
         NotificationCenter.default.post(name: .triggerEmote, object: BotEmote.proud)
     }
 
-    private func showError(_ message: String, state: AppState) async {
+    func showError(_ message: String, state: AppState) async {
         state.stateOverride = .error
         state.noteMessage = message
         state.view = .note

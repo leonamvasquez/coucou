@@ -75,6 +75,9 @@ final class AppState: ObservableObject {
     @Published var lmstudioChatModel: String = ChatProvider.lmstudio.defaultModel {
         didSet { UserDefaults.standard.set(lmstudioChatModel, forKey: "lmstudioChatModel") }
     }
+    @Published var claudeCodeChatModel: String = ChatProvider.claudecode.defaultModel {
+        didSet { UserDefaults.standard.set(claudeCodeChatModel, forKey: "claudeCodeChatModel") }
+    }
     @Published var ollamaServerURL: String = "" {
         didSet { UserDefaults.standard.set(ollamaServerURL, forKey: "ollamaServerURL") }
     }
@@ -97,6 +100,11 @@ final class AppState: ObservableObject {
     func fetchModelsIfNeeded(for provider: ChatProvider) {
         guard !loadingProviderModels.contains(provider),
               fetchedProviderModels[provider] == nil else { return }
+        // Claude Code CLI: fixed aliases understood by `claude --model`, no network or key
+        if provider.isCLI {
+            fetchedProviderModels[provider] = ClaudeCodeChat.models
+            return
+        }
         // Local providers: fetch from server URL (no API key needed)
         if provider.isLocal {
             let baseURL = provider == .ollama ? ollamaServerURL : lmstudioServerURL
@@ -144,7 +152,7 @@ final class AppState: ObservableObject {
             case .anthropic: models = await ClaudeService.fetchModels(apiKey: apiKey)
             case .google:    models = await ClaudeService.fetchGoogleModels(apiKey: apiKey)
             case .openai:    models = await ClaudeService.fetchOpenAIModels(apiKey: apiKey)
-            case .ollama, .lmstudio: models = []  // handled above
+            case .ollama, .lmstudio, .claudecode: models = []  // handled above
             }
             loadingProviderModels.remove(provider)
             if models.isEmpty {
@@ -164,7 +172,7 @@ final class AppState: ObservableObject {
                     if !models.contains(where: { $0.id == openAIChatModel }) {
                         openAIChatModel = models.first(where: { $0.id.contains("mini") })?.id ?? models.first!.id
                     }
-                case .ollama, .lmstudio: break
+                case .ollama, .lmstudio, .claudecode: break
                 }
             }
         }
@@ -178,6 +186,7 @@ final class AppState: ObservableObject {
         case .openai:    return openAIChatModel
         case .ollama:    return ollamaChatModel
         case .lmstudio:  return lmstudioChatModel
+        case .claudecode: return claudeCodeChatModel
         }
     }
 
@@ -332,6 +341,7 @@ final class AppState: ObservableObject {
         if let v = ud.string(forKey: "openAIChatModel"), !v.isEmpty { openAIChatModel = v }
         if let v = ud.string(forKey: "ollamaChatModel"), !v.isEmpty { ollamaChatModel = v }
         if let v = ud.string(forKey: "lmstudioChatModel"), !v.isEmpty { lmstudioChatModel = v }
+        if let v = ud.string(forKey: "claudeCodeChatModel"), !v.isEmpty { claudeCodeChatModel = v }
         if let v = ud.string(forKey: "ollamaServerURL"), !v.isEmpty { ollamaServerURL = v }
         if let v = ud.string(forKey: "lmstudioServerURL"), !v.isEmpty { lmstudioServerURL = v }
         // Migrate old 60s default → 15s

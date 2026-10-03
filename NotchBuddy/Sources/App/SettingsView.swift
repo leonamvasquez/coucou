@@ -1170,7 +1170,9 @@ struct SettingsView: View {
             if def.id == "agent_codex"         && !HookServer.codexHooksInstalled()  { return "Hooks not installed" }
             #endif
             if def.category == .ai {
-                if let provider = ChatProvider(pillID: def.id), provider.isLocal {
+                if let provider = ChatProvider(pillID: def.id), provider.isCLI {
+                    if !ClaudeCodeChat.isAvailable { return "Claude Code CLI not found" }
+                } else if let provider = ChatProvider(pillID: def.id), provider.isLocal {
                     let url = provider == .ollama ? state.ollamaServerURL : state.lmstudioServerURL
                     if url.isEmpty { return "Not connected" }
                 } else {

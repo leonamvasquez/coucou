@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Chat with Claude Code (GitHub build, macOS): a new "Claude Code" provider in the chat uses the `claude` CLI and the login you already have, no API key needed. Web search and fetch only; your hooks, MCP servers and project files are not loaded.
+
 ## 0.1.2 — October 2, 2026
 
 - Codex support (GitHub build): sessions show up live on the Codex pill, and permission requests get Allow and Deny in the notch. Install from Settings → Codex Hooks, then trust the hooks once with /hooks in Codex (#130) — thanks @lacatu5

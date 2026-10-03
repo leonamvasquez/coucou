@@ -75,6 +75,7 @@ enum ChatProvider: String, CaseIterable, Codable {
     case openai    = "openai"
     case ollama    = "ollama"
     case lmstudio  = "lmstudio"
+    case claudecode = "claudecode"   // local `claude` CLI, uses the user's Claude Code login (no API key)
 
     var displayName: String {
         switch self {
@@ -83,6 +84,7 @@ enum ChatProvider: String, CaseIterable, Codable {
         case .openai:    "OpenAI"
         case .ollama:    "Ollama"
         case .lmstudio:  "LM Studio"
+        case .claudecode: "Claude Code"
         }
     }
 
@@ -93,6 +95,7 @@ enum ChatProvider: String, CaseIterable, Codable {
         case .openai:    "#10A37F"
         case .ollama:    "#FACC15"
         case .lmstudio:  "#A3E635"
+        case .claudecode: "#D97757"
         }
     }
 
@@ -103,6 +106,7 @@ enum ChatProvider: String, CaseIterable, Codable {
         case .openai:    "gpt-4o"
         case .ollama:    "llama3.2"
         case .lmstudio:  "local-model"
+        case .claudecode: "sonnet"
         }
     }
 
@@ -113,12 +117,16 @@ enum ChatProvider: String, CaseIterable, Codable {
         case .openai:    "openai-api-key"
         case .ollama:    ""
         case .lmstudio:  ""
+        case .claudecode: ""
         }
     }
 
     var isLocal: Bool {
         self == .ollama || self == .lmstudio
     }
+
+    /// Talks to the local `claude` CLI instead of an HTTP API (GitHub build only).
+    var isCLI: Bool { self == .claudecode }
 
     var pillID: String {
         switch self {
@@ -127,6 +135,7 @@ enum ChatProvider: String, CaseIterable, Codable {
         case .openai:    "ai_openai"
         case .ollama:    "ai_ollama"
         case .lmstudio:  "ai_lmstudio"
+        case .claudecode: "ai_claudecode"
         }
     }
 
@@ -137,6 +146,7 @@ enum ChatProvider: String, CaseIterable, Codable {
         case "ai_openai":    self = .openai
         case "ai_ollama":    self = .ollama
         case "ai_lmstudio":  self = .lmstudio
+        case "ai_claudecode": self = .claudecode
         default:             return nil
         }
     }
